@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -7,31 +6,17 @@ use App\Models\Clientes;
 
 class ClientesController extends Controller
 {
-    // Mostrar todos los clientes
     public function index()
     {
         $clientes = Clientes::all();
-
-        if ($clientes->isEmpty()) {
-            return response()->json(['message' => 'No hay clientes disponibles'], 404);
-        }
-
-        return response()->json($clientes, 200);
+        return view('clientes.index', compact('clientes'));
     }
 
-    // Mostrar un solo cliente
-    public function show($id)
+    public function create()
     {
-        $cliente = Clientes::find($id);
-
-        if (!$cliente) {
-            return response()->json(['message' => 'Cliente no encontrado'], 404);
-        }
-
-        return response()->json($cliente, 200);
+        return view('clientes.create');
     }
 
-    // Crear nuevo cliente
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -41,43 +26,45 @@ class ClientesController extends Controller
             'telefono' => 'required|string',
         ]);
 
-        $cliente = Clientes::create($validated);
+        Clientes::create($validated);
 
-        return response()->json($cliente, 201);
+        return redirect()->route('clientes.index')->with('success', 'Cliente creado correctamente');
     }
 
-    // Actualizar cliente existente
+    public function edit($id)
+    {
+        $cliente = Clientes::findOrFail($id);
+        return view('clientes.edit', compact('cliente'));
+    }
+
     public function update(Request $request, $id)
     {
-        $cliente = Clientes::find($id);
-
-        if (!$cliente) {
-            return response()->json(['message' => 'Cliente no encontrado'], 404);
-        }
+        $cliente = Clientes::findOrFail($id);
 
         $validated = $request->validate([
-            'nombre' => 'sometimes|required|string',
-            'apellido' => 'sometimes|required|string',
-            'email' => 'sometimes|required|email',
-            'telefono' => 'sometimes|required|string',
+            'nombre' => 'required|string',
+            'apellido' => 'required|string',
+            'email' => 'required|email',
+            'telefono' => 'required|string',
         ]);
 
         $cliente->update($validated);
 
-        return response()->json($cliente, 200);
+        return redirect()->route('clientes.index')->with('success', 'Cliente actualizado correctamente');
     }
 
-    // Eliminar cliente
     public function destroy($id)
     {
-        $cliente = Clientes::find($id);
-
-        if (!$cliente) {
-            return response()->json(['message' => 'Cliente no encontrado'], 404);
-        }
-
+        $cliente = Clientes::findOrFail($id);
         $cliente->delete();
 
-        return response()->json(['message' => 'Cliente eliminado con éxito'], 200);
+        return redirect()->route('clientes.index')->with('success', 'Cliente eliminado correctamente');
+    }
+
+    public function buscar(Request $request)
+    {
+        $id = $request->input('id');
+        $clientes = Clientes::where('id', $id)->get();
+        return view('clientes.index', compact('clientes'));
     }
 }
